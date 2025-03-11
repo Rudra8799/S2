@@ -14,7 +14,7 @@ import "./App.css";
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, ArcElement);
 
-const socket = io("https://stat-pac-backend.vercel.app/");
+const socket = io("https://stat-pac-backend.onrender.com/");
 
 function App() {
   const [packageName, setPackageName] = useState("");
