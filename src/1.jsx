@@ -10,21 +10,27 @@ import {
   ArcElement,
 } from "chart.js";
 import "./App.css";
+import { Link } from "react-router-dom";
+import { useStats } from "./StatsContext";
 
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, ArcElement);
 
-const socket = io("https://stat-pac-backend.vercel.app/");
+const socket = io("http://localhost:5000");
 
 function App() {
   const [packageName, setPackageName] = useState("");
-  const [stats, setStats] = useState(null);
+  const { stats, setStats,name ,setName } = useStats(); // Use the context
   const [baseDownloads, setBaseDownloads] = useState(0);
   const [chartData, setChartData] = useState({ labels: [], dataPoints: [] });
   const [rateData, setRateData] = useState({ labels: [], rates: [] });
+  const [loading, setLoading] = useState(false);
 
   const trackPackage = () => {
+    setLoading(true);
     if (packageName) {
+      setName(packageName);
+
       socket.emit("trackPackage", packageName);
       setChartData({ labels: [], dataPoints: [] });
       setRateData({ labels: [], rates: [] });
@@ -34,6 +40,7 @@ function App() {
   useEffect(() => {
     socket.on("packageUpdate", (data) => {
       setStats(data);
+      setLoading(false);
 
       setBaseDownloads((prevBaseDownloads) =>
         prevBaseDownloads === 0 ? data.baseDownloads : prevBaseDownloads
@@ -94,12 +101,28 @@ function App() {
           />
           <button
             onClick={trackPackage}
+            
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded uppercase font-bold shadow-lg transition"
           >
             Track
           </button>
         </div>
       </div>
+      {/* Loading Spinner */}
+      {loading && (
+        <div className="flex justify-center items-center my-4">
+          <img
+            src="/tube-spinner.svg"
+            alt="Loading..."
+            className="w-20 h-20 animate-spin"
+          />
+        </div>
+      )}
+
+      {/* Error Message */}
+      {!loading && !stats && (
+        <p className="text-red-500 text-center mt-4">No data available</p>
+      )}
 
       {/* Package Info Cards */}
       {stats && (
@@ -148,6 +171,13 @@ function App() {
               </a>
             </p>
           </div>
+          <Link to="/versions"  >
+         
+            <div className="bg-gray-800 rounded-lg shadow-lg p-4">
+              <h3 className="text-xl font-bold uppercase mb-2">All Versions</h3>
+             
+            </div>
+          </Link>
           <div className="bg-gray-800 rounded-lg shadow-lg p-4 md:col-span-2">
             <h3 className="text-xl font-bold uppercase mb-2">Description</h3>
             <p className="text-lg">{stats.description}</p>
